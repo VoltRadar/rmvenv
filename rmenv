@@ -7,7 +7,6 @@ import sys
 import math
 import shutil
 import threading
-import time
 
 SIZES = {
     "k": 2 ** 10,
@@ -548,10 +547,7 @@ def main():
 
 if __name__ == "__main__":
     try:
-        t1 = time.monotonic()
         main()
-        t2 = time.monotonic()
-        print(t2 - t1)
     except KeyboardInterrupt:
         print("\nKeyboardInterrupt", file=sys.stderr)
         raise
