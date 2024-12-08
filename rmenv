@@ -6,6 +6,8 @@ import re
 import sys
 import math
 import shutil
+import threading
+import time
 
 SIZES = {
     "k": 2 ** 10,
@@ -63,6 +65,113 @@ class HumanFilesize:
     def __repr__(self):
         return self.size_human_string
 
+
+class StatusIndicator:
+
+    # Don't Log anything before this time
+    DONT_LOG = 0.1
+
+    # Don't print what files are being written before this time
+    LOG_WORKING = 0.5
+
+    # Print every x seconds
+    LOG_PERIOD = 0.3
+
+    # File to write logs to
+    FILE = sys.stderr
+
+    def __init__(self):
+        self.thread: threading.Thread = threading.Thread(target=self.main_thread)
+        self.text: str = ""
+        self.text_lock = threading.Lock()
+        self.stop_flag = threading.Event()
+
+        self.non_interactive_terminal = False
+
+        try:
+            self.terminal_width = os.get_terminal_size().columns
+        except OSError as e:
+            if e.errno == 25:
+                # Non interactive terminal
+                self.non_interactive_terminal = True
+    
+    def update_text(self, text):
+        """
+        Updates the status. Acquires the lock on the tex 
+        """
+
+        self.text_lock.acquire()
+        self.text = text
+        self.text_lock.release()
+
+        # print("New text:", text)
+
+    def main_thread(self):
+        """Displays error info. Should run in a thread"""
+
+        # If non interactive terminal, stop immediately
+        if self.non_interactive_terminal:
+            return
+
+        if self.stop_flag.wait(self.DONT_LOG):
+            return
+        
+        self.__write("Working")
+        
+        if self.stop_flag.wait(self.LOG_WORKING - self.DONT_LOG):
+            self.__write("")  # Clear the screen
+            return
+
+        while True:
+
+            # Write text to screen, including a carriage return '\r'
+                    
+            self.text_lock.acquire()
+
+            # If required to stop after getting lock
+            if self.stop_flag.is_set():
+                self.text_lock.release()
+                return
+            
+            self.__write(f"Working: {self.text}")
+
+            self.text_lock.release()
+
+            # Wait the log period before printing again
+            
+            if self.stop_flag.wait(self.LOG_PERIOD):
+                self.__write(" " * self.terminal_width)
+                return
+        
+
+    def __write(self, text):
+        """
+        Write text to terminal, ending in a carriage return.
+        
+        Truncates the text with ' ...' if it's to long
+        """
+
+        if len(text) > self.terminal_width:
+            text = text[:self.terminal_width - 4] + " ..."
+        
+        white_space = self.terminal_width - len(text)
+        text = text + " " * white_space
+
+        self.FILE.write(text + "\r")
+    
+    def start(self):
+        """
+        Start the thread
+        """
+        self.thread.start()
+    
+    def stop(self):
+        """Stop the thread"""
+        self.stop_flag.set()
+
+        # Wait for thread to finish
+        self.thread.join()
+    
 
 class SizeAction(argparse.Action):
     """
@@ -159,6 +268,9 @@ class Cleaner:
 
         # Flag to delete marked items instead of deleting them
         self.delete_marked_items = False
+
+        # Status indicator in the terminal
+        self.status = StatusIndicator()
     
     def get_size(self, item_path: str):
         """
@@ -177,13 +289,14 @@ class Cleaner:
 
         # If size already known, return it
         if item_path in self.sizes:
+            self.status.update_text(item_path)
             return self.sizes[item_path]
         
-
-
         if os.path.isfile(item_path):
             size = os.stat(item_path).st_size
             self.sizes[item_path] = size
+
+            self.status.update_text(item_path)
             return size
         
         elif os.path.isdir(item_path):
@@ -197,12 +310,15 @@ class Cleaner:
                 size += self.get_size(child_item.path)
             
             self.sizes[item_path] = size
+
+            self.status.update_text(item_path)
+
             return size
 
             
         else:
-            # Not a file or directory ???
-            raise ValueError(f"Type of item {item_path} is unknown!")
+            # Not a file or directory. Skip
+            return 0
 
 
     def evaluate(self, item: os.DirEntry):
@@ -242,6 +358,7 @@ class Cleaner:
         # Calculate the size of the item
         size = self.get_size(item.path)
         if size < self.mark_size_bytes:
+
             return False
 
 
@@ -262,7 +379,6 @@ class Cleaner:
                 return True
 
         return False
-
 
     def search(self, path):
         """
@@ -287,6 +403,8 @@ class Cleaner:
                 if item.is_dir() and item.name not in self.skip_dirs:
                     # Search recursively
                     self.search(item.path)
+            
+            self.status.update_text(item.path)
     
     def delete_marked_item(self, item: os.DirEntry) -> bool:
         """
@@ -391,7 +509,12 @@ class Cleaner:
         self.delete_marked_items = args.delete
         self.force = args.force
 
+        self.status.start()
         self.search(path)
+        self.status.stop()
+        
+        # Stops the status
+        self.status.stop()
     
     def process_marked_items(self):
         """
@@ -425,10 +548,16 @@ def main():
 
 if __name__ == "__main__":
     try:
+        t1 = time.monotonic()
         main()
+        t2 = time.monotonic()
+        print(t2 - t1)
     except KeyboardInterrupt:
         print("\nKeyboardInterrupt", file=sys.stderr)
+        raise
 
 
 
-# TODO: Thread to print update... including how many items it's done. For long run times. Based on class itself. Use carrage returns (\r) to delete terminal
+
+# TODO: Handle Permission denied errors
+# TODO: Handle killing thread in keyboard interrupt
