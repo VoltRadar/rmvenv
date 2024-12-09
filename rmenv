@@ -158,6 +158,10 @@ class StatusIndicator:
 
         self.FILE.write(text + "\r")
     
+    def clear(self):
+        """ Clear the line of text """
+        self.__write("")
+    
     def start(self):
         """
         Start the thread
@@ -286,6 +290,9 @@ class Cleaner:
         and files in the directory will be stored as well as their sizes
         """
 
+        if "DENIED" in item_path:
+            pass
+
         # If size already known, return it
         if item_path in self.sizes:
             self.status.update_text(item_path)
@@ -316,7 +323,7 @@ class Cleaner:
 
             
         else:
-            # Not a file or directory. Skip
+            # Not a file or directory, or something with can read. Skip.
             return 0
 
 
@@ -394,14 +401,30 @@ class Cleaner:
             if item.is_symlink():
                 continue
             
-            # Check if you should print it
-            if self.evaluate(item):
-                self.marked_items.append(item)
-            
-            else:
-                if item.is_dir() and item.name not in self.skip_dirs:
-                    # Search recursively
-                    self.search(item.path)
+            try:
+                # Check if you should print it
+                if self.evaluate(item):
+                    self.marked_items.append(item)
+                
+                else:
+                    if item.is_dir() and item.name not in self.skip_dirs:
+                        # Search recursively
+                        self.search(item.path)
+            except PermissionError:
+                # Don't have permission to read file
+
+                # Manage the status, as this is printed to stderr
+                with self.status.text_lock:
+                    self.status.clear()
+
+                    # Print error information
+                    print(
+                        f"Read permission error: {item.path}",
+                        file=sys.stderr
+                    )
+
+
+
             
             self.status.update_text(item.path)
     
@@ -433,15 +456,14 @@ class Cleaner:
                 print("Skipping...")
                 return
         
-        if item.is_file():
-            os.remove(item.path)
-        
-        elif item.is_dir():
-            shutil.rmtree(item.path)
-
-        # Print path (size) with each request
-        # then shutil.rmtree when you're sure
-        # Check if no is a substring with regex
+        try:
+            if item.is_file():
+                os.remove(item.path)
+            
+            elif item.is_dir():
+                shutil.rmtree(item.path)
+        except:
+            print(f"Delete permission error: {item.path}", file=sys.stderr)
 
     
     def process_args(self):
@@ -553,7 +575,5 @@ if __name__ == "__main__":
         raise
 
 
-
-
-# TODO: Handle Permission denied errors
+# TODO: Handle Permission denied errors (writing)
 # TODO: Handle killing thread in keyboard interrupt
