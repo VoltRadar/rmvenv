@@ -159,6 +159,10 @@ class StatusIndicator:
 
         self.FILE.write(text + "\r")
     
+    def clear(self):
+        """ Clear the line of text """
+        self.__write("")
+    
     def start(self):
         """
         Start the thread
@@ -395,14 +399,30 @@ class Cleaner:
             if item.is_symlink():
                 continue
             
-            # Check if you should print it
-            if self.evaluate(item):
-                self.marked_items.append(item)
-            
-            else:
-                if item.is_dir() and item.name not in self.skip_dirs:
-                    # Search recursively
-                    self.search(item.path)
+            try:
+                # Check if you should print it
+                if self.evaluate(item):
+                    self.marked_items.append(item)
+                
+                else:
+                    if item.is_dir() and item.name not in self.skip_dirs:
+                        # Search recursively
+                        self.search(item.path)
+            except PermissionError:
+                # Don't have permission to read file
+
+                # Manage the status, as this is printed to stderr
+                with self.status.text_lock:
+                    self.status.clear()
+
+                    # Print error information
+                    print(
+                        f"Read Permission error: {item.path}",
+                        file=sys.stderr
+                    )
+
+
+
             
             self.status.update_text(item.path)
     
@@ -548,16 +568,11 @@ def main():
 
 if __name__ == "__main__":
     try:
-        t1 = time.monotonic()
         main()
-        t2 = time.monotonic()
-        print(t2 - t1)
     except KeyboardInterrupt:
         print("\nKeyboardInterrupt", file=sys.stderr)
         raise
 
 
-
-
-# TODO: Handle Permission denied errors
+# TODO: Handle Permission denied errors (writing)
 # TODO: Handle killing thread in keyboard interrupt
