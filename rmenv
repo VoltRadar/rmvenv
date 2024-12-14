@@ -410,6 +410,7 @@ class Cleaner:
                     if item.is_dir() and item.name not in self.skip_dirs:
                         # Search recursively
                         self.search(item.path)
+            
             except PermissionError:
                 # Don't have permission to read file
 
@@ -422,9 +423,8 @@ class Cleaner:
                         f"Read permission error: {item.path}",
                         file=sys.stderr
                     )
-
-
-
+                
+                # Release the lock, allowing the status to continue
             
             self.status.update_text(item.path)
     
@@ -533,9 +533,6 @@ class Cleaner:
         self.status.start()
         self.search(path)
         self.status.stop()
-        
-        # Stops the status
-        self.status.stop()
     
     def process_marked_items(self):
         """
@@ -561,8 +558,17 @@ def debug():
 
 def main():
     c = Cleaner()
-    c.process_args()
-    c.process_marked_items()
+
+    try:
+        c.process_args()
+        c.process_marked_items()
+    
+    except BaseException:
+        # Tell the status thread to stop if it hasn't already
+        c.status.stop_flag.set()
+        
+        # Re-raise the exception
+        raise
 
 # venv/pyvenv.cfg
 # target/CACHEDIR.TAG
@@ -572,8 +578,6 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print("\nKeyboardInterrupt", file=sys.stderr)
-        raise
+        sys.exit(130)
 
-
-# TODO: Handle Permission denied errors (writing)
 # TODO: Handle killing thread in keyboard interrupt
