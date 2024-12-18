@@ -1,3 +1,23 @@
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "rmvenv"
+version = "0.1.0"
+authors = [
+    {name="Daisy F", email="daisyfarns@gmail.com"}
+]
+description = "Find and delete built environments"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License"
+]
+
+# Operating System classifier needs adding
+
+[project.urls]
+Homepage = "https://www.example.com"
+Issues = "https://www.example.com"
