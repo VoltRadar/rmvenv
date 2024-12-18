@@ -582,23 +582,24 @@ def debug():
     
 
 def main():
-    c = Cleaner()
-
     try:
-        c.process_args()
-        c.process_marked_items()
-    
-    except BaseException:
-        # Tell the status thread to stop if it hasn't already
-        c.status.stop_flag.set()
+        c = Cleaner()
+
+        try:
+            c.process_args()
+            c.process_marked_items()
         
-        # Re-raise the exception
-        raise
-
-
-if __name__ == "__main__":
-    try:
-        main()
+        except BaseException:
+            # Tell the status thread to stop if it hasn't already
+            c.status.stop_flag.set()
+            
+            # Re-raise the exception
+            raise
     except KeyboardInterrupt:
         print("\nKeyboardInterrupt", file=sys.stderr)
         sys.exit(130)
+
+
+
+if __name__ == "__main__":
+    main()

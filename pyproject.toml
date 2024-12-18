@@ -15,9 +15,14 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License"
 ]
+license = { file = "LICENSE.txt" }
+keywords = ["venv", "delete", "manage", "list", "rust", "target"]
 
-# Operating System classifier needs adding
+# TODO: Explore classifiers more
 
 [project.urls]
 Homepage = "https://www.example.com"
 Issues = "https://www.example.com"
+
+[project.scripts]
+rmvenv = "rmvenv:main"
