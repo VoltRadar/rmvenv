@@ -484,7 +484,7 @@ class Cleaner:
         \trmenv -s 200M -d code"""
     
         parser = argparse.ArgumentParser(
-            prog="clean",
+            prog="rmvenv",
             description=desc,
             epilog=epilog,
             formatter_class=argparse.RawDescriptionHelpFormatter
@@ -525,7 +525,19 @@ class Cleaner:
             help="Don't ask for confirmation"
         )
 
+        parser.add_argument(
+            "--version",
+            action="store_true",
+            help="Print version and exit"
+        )
+
         args = parser.parse_args()
+
+        # Print version and exit
+        if args.version:
+            print(f"{parser.prog}: {VERSION}")
+            sys.exit(0)
+
 
         if args.dir:
             path = args.dir
@@ -541,6 +553,8 @@ class Cleaner:
         self.delete_marked_items = args.delete
         self.force = args.force
 
+        # Search the directory, printing the status while doing so
+        
         self.status.start()
         self.search(path)
         self.status.stop()
@@ -581,8 +595,6 @@ def main():
         # Re-raise the exception
         raise
 
-# venv/pyvenv.cfg
-# target/CACHEDIR.TAG
 
 if __name__ == "__main__":
     try:
