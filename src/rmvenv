@@ -473,10 +473,19 @@ class Cleaner:
 
         desc = "Searches target directory recessively location of python venv's," \
            " Rust target/ directories, and exe files. Skips `.git` directories"
+        
+        epilog = """Examples:
+        List build environments in current directory:
+        \trmenv
+        
+        Delete build environments and directories and files over 200M in directory 'code':
+        \trmenv -s 200M -d code"""
     
         parser = argparse.ArgumentParser(
             prog="clean",
-            description=desc
+            description=desc,
+            epilog=epilog,
+            formatter_class=argparse.RawDescriptionHelpFormatter
         )
 
         parser.add_argument(
@@ -580,4 +589,6 @@ if __name__ == "__main__":
         print("\nKeyboardInterrupt", file=sys.stderr)
         sys.exit(130)
 
-# TODO: Handle killing thread in keyboard interrupt
+# TODO: Check what thread features are available on platforms
+
+# Info: min python 3.7 it seems, but maybe only python 3.10
