@@ -602,7 +602,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nKeyboardInterrupt", file=sys.stderr)
         sys.exit(130)
-
-# TODO: Check what thread features are available on platforms
-
-# Info: min python 3.7 it seems, but maybe only python 3.10
