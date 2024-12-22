@@ -481,7 +481,7 @@ class Cleaner:
         \trmenv
         
         Delete build environments and directories and files over 200M in directory 'code':
-        \trmenv -s 200M -d code"""
+        \trmenv -s 200M -d code --delete"""
     
         parser = argparse.ArgumentParser(
             prog="rmvenv",
@@ -503,6 +503,7 @@ class Cleaner:
         )
 
         size_help = "Mark files and directories over a given size in bytes. " \
+                    "Doesn't have to be a build environment! " \
                     'Default size is 100M. Sizes can "1024", "50m", ' \
                     '"7.5G" ect.'
         
@@ -595,6 +596,7 @@ def main():
             
             # Re-raise the exception
             raise
+    
     except KeyboardInterrupt:
         print("\nKeyboardInterrupt", file=sys.stderr)
         sys.exit(130)
