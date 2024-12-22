@@ -19,6 +19,16 @@ repositories. Hopefully these errors are rare.
 
 ## Installation
 
+### Requirements
+
+- Python >= 3.10
+- pip
+
+I think it's OS independent, but I've not tested it outside of a Linux
+OS, so tread with caution.
+
+### Steps
+
 Open the command line and run
 
 ```

@@ -11,14 +11,22 @@ authors = [
 description = "Find and delete built environments"
 readme = "README.md"
 requires-python = ">=3.10"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License"
-]
 license = { file = "LICENSE.txt" }
 keywords = ["venv", "delete", "manage", "list", "rust", "target"]
 
-# TODO: Explore classifiers more
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",  # Assumed
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: System :: Archiving"
+]
+
+
 
 [project.urls]
 Homepage = "https://www.example.com"
