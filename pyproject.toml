@@ -27,10 +27,8 @@ classifiers = [
 ]
 
 
-
 [project.urls]
-Homepage = "https://www.example.com"
-Issues = "https://www.example.com"
+Homepage = "https://github.com/VoltRadar/rmvenv/"
 
 [project.scripts]
 rmvenv = "rmvenv:main"

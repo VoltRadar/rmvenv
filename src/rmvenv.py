@@ -602,6 +602,10 @@ def main():
         sys.exit(130)
 
 
-
 if __name__ == "__main__":
     main()
+
+# Build command:
+# pyproject-build
+
+# TODO: Figure out ModualNotFoundError lol
